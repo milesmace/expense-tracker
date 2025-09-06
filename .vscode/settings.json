@@ -1,0 +1,11 @@
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "always",
+    "source.fixAll.eslint": "always",
+    "source.organizeImports": "always"
+  },
+  "eslint.validate": ["typescript", "typescriptreact"],
+  "prettier.requireConfig": true,
+  "typescript.preferences.importModuleSpecifier": "relative"
+}
