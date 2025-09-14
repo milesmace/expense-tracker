@@ -7,9 +7,10 @@ import { loadFromStorage } from '@/utils';
 
 type ThemeStore = {
   theme: Theme;
-  toggleTheme: () => void;
+
   setLightTheme: () => void;
   setDarkTheme: () => void;
+  setSystemTheme: () => void;
 };
 
 const defaultTheme: Theme = loadFromStorage<Theme>(STORAGE.THEME, config.theme);
@@ -18,12 +19,9 @@ const defaultTheme: Theme = loadFromStorage<Theme>(STORAGE.THEME, config.theme);
 export const useThemeStore = create<ThemeStore>((set) => ({
   theme: defaultTheme,
 
-  toggleTheme: () =>
-    set((state) => ({
-      theme: state.theme === THEME.LIGHT ? THEME.DARK : THEME.LIGHT,
-    })),
   setLightTheme: () => set({ theme: THEME.LIGHT }),
   setDarkTheme: () => set({ theme: THEME.DARK }),
+  setSystemTheme: () => set({ theme: THEME.SYSTEM }),
 }));
 
 /** Theme Selector */

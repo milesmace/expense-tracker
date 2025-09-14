@@ -3,6 +3,7 @@
 
 import path from 'node:path';
 
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, loadEnv } from 'vite';
@@ -14,6 +15,7 @@ import type { UserConfig } from 'vite';
 const commonConfig: UserConfig = {
   plugins: [
     react(),
+    tailwindcss(),
     viteCompression({
       algorithm: 'gzip',
       deleteOriginFile: false,
