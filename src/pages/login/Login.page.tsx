@@ -1,3 +1,9 @@
 import type { FC } from 'react';
 
-export const LoginPage: FC = () => 'Login Page';
+import { Login } from '@/containers';
+
+export const LoginPage: FC = () => (
+  <div className="mx-auto my-20 max-w-100">
+    <Login />
+  </div>
+);
