@@ -1,13 +1,10 @@
-import type { FC } from 'react';
-import { Outlet } from 'react-router-dom';
+import type { FC, ReactNode } from 'react';
 
 import { ToggleTheme } from '@/containers';
 
-export const DefaultLayout: FC = () => (
+export const DefaultLayout: FC<{ children?: ReactNode }> = ({ children }) => (
   <div className="font-poppins flex min-h-screen flex-col">
-    <main className="max-w-app mx-auto w-full grow">
-      <Outlet />
-    </main>
+    <main className="max-w-app mx-auto w-full grow">{children}</main>
 
     <footer className="border-t">
       <div className="max-w-app mx-auto w-full p-4">

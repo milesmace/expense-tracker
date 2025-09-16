@@ -6,7 +6,7 @@ import { loadFromStorage } from '@/utils';
 
 import { type AuthStoreType } from './useAuth.store.types';
 
-const initialState = loadFromStorage<AuthSession>(STORAGE.AUTH);
+const initialState = loadFromStorage<AuthSession>(STORAGE.AUTH());
 
 export const useAuthStore = create<AuthStoreType>((set) => ({
   auth: initialState ? { isLoggedIn: true, ...initialState } : null,
