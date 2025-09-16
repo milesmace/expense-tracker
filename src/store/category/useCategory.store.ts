@@ -1,0 +1,23 @@
+import { create } from 'zustand';
+
+import type { Category } from '@/types';
+
+import type { CategoryStore } from './useCategory.store.types';
+
+export const useCategoryStore = create<CategoryStore>((set) => ({
+  categories: {},
+
+  addCategory: (category: Category) =>
+    set((state) => ({
+      categories: { ...state.categories, [category.id]: category },
+    })),
+  removeCategory: (categoryId: number) =>
+    set((state) => {
+      const final = state.categories;
+      delete final[categoryId];
+
+      return {
+        categories: final,
+      };
+    }),
+}));
