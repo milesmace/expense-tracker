@@ -6,6 +6,7 @@ import { type AccountsStore } from './useAccounts.store.types';
 
 export const useAccountsStore = create<AccountsStore>((set) => ({
   accounts: {},
+  isLoading: false,
 
   addAccount: (account: Account) =>
     set((state) => ({

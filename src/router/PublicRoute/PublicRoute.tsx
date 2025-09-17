@@ -1,17 +1,24 @@
-import type { FC, ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useEffect, type FC } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
 
 import { APP_ROUTES } from '@/constants';
 import { DefaultLayout } from '@/layouts';
-import { selectAuth, useAuthStore } from '@/store/auth';
+import { selectAuth, useAuthStore } from '@/store';
 
-export const PublicRoute: FC<{ children?: ReactNode }> = ({ children }) => {
+export const PublicRoute: FC = () => {
+  const navigate = useNavigate();
   const auth = useAuthStore(selectAuth);
 
-  // If authenticated, then redirect to HOME
-  if (auth) {
-    return <Navigate to={APP_ROUTES.HOME} replace />;
-  }
+  useEffect(() => {
+    // If authenticated, then redirect to HOME
+    if (auth) {
+      navigate(APP_ROUTES.HOME, { replace: true });
+    }
+  }, [auth, navigate]);
 
-  return <DefaultLayout>{children}</DefaultLayout>;
+  return (
+    <DefaultLayout>
+      <Outlet />
+    </DefaultLayout>
+  );
 };

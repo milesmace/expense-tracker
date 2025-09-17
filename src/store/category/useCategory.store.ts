@@ -6,6 +6,7 @@ import type { CategoryStore } from './useCategory.store.types';
 
 export const useCategoryStore = create<CategoryStore>((set) => ({
   categories: {},
+  isLoading: false,
 
   addCategory: (category: Category) =>
     set((state) => ({

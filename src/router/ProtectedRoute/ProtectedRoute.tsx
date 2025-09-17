@@ -1,9 +1,9 @@
-import { useEffect, type FC, type ReactNode } from 'react';
+import { useEffect, type FC } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
 
-import { SUPABASE_CONSTANTS } from '@/constants';
+import { APP_ROUTES, SUPABASE_CONSTANTS } from '@/constants';
 import { DefaultLayout } from '@/layouts';
 import {
-  selectAccounts,
   selectAuth,
   useAccountsStore,
   useAuthStore,
@@ -12,18 +12,26 @@ import {
 import { supabase } from '@/supabase';
 import type { Account, Category } from '@/types';
 
-export const ProtectedRoute: FC<{ children?: ReactNode }> = ({ children }) => {
+export const ProtectedRoute: FC = () => {
+  const navigate = useNavigate();
   const auth = useAuthStore(selectAuth);
   const { addAccount } = useAccountsStore();
   const { addCategory } = useCategoryStore();
-  const accounts = useAccountsStore(selectAccounts);
+
+  useEffect(() => {
+    // If not authenticated, then redirect to LOGIN
+    if (!auth) {
+      navigate(APP_ROUTES.LOGIN, { replace: true });
+    }
+  }, [auth, navigate]);
 
   // Fetch the data from supabase
   useEffect(() => {
     // Accounts
     (async () => {
+      useAccountsStore.setState({ isLoading: true });
       const { data, error } = await supabase
-        .from(SUPABASE_CONSTANTS.TABLES.ACCOUNTS)
+        .from(SUPABASE_CONSTANTS.TABLES.ACCOUNTS._)
         .select();
 
       // Set the zustand store
@@ -32,30 +40,27 @@ export const ProtectedRoute: FC<{ children?: ReactNode }> = ({ children }) => {
           addAccount(account);
         });
       }
+      useAccountsStore.setState({ isLoading: false });
     })();
 
     // Categories
     (async () => {
+      useCategoryStore.setState({ isLoading: true });
       const { data, error } = await supabase
-        .from(SUPABASE_CONSTANTS.TABLES.CATEGORIES)
+        .from(SUPABASE_CONSTANTS.TABLES.CATEGORIES._)
         .select();
 
       // Set the zustand store
       if (!error) {
         (data as Category[]).forEach((category) => addCategory(category));
       }
+      useCategoryStore.setState({ isLoading: false });
     })();
   }, [addAccount, addCategory]);
 
   return (
     <DefaultLayout>
-      {children}
-      <pre className="max-w-full break-words whitespace-pre-wrap">
-        <code className="block">{JSON.stringify(accounts, null, 2)}</code>
-      </pre>
-      <pre className="max-w-full break-words whitespace-pre-wrap">
-        <code className="block">{JSON.stringify(auth, null, 2)}</code>
-      </pre>
+      <Outlet />
     </DefaultLayout>
   );
 };

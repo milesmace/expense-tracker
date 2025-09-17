@@ -9,8 +9,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui';
-import { THEME } from '@/constants';
+import { STORAGE, THEME } from '@/constants';
 import { useThemeStore } from '@/store';
+import { saveToStorage } from '@/utils';
 
 export const ToggleTheme: FC = () => {
   const { theme, setDarkTheme, setLightTheme, setSystemTheme } =
@@ -30,6 +31,8 @@ export const ToggleTheme: FC = () => {
     } else {
       document.body.classList.remove('dark');
     }
+
+    saveToStorage(STORAGE.THEME, theme);
   }, [theme]);
 
   // Callbacks
