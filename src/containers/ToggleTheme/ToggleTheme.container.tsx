@@ -1,23 +1,22 @@
 import { useCallback, useEffect, type FC } from 'react';
 
+import { Laptop, Moon, Sun } from 'lucide-react';
+
 import {
+  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@radix-ui/react-dropdown-menu';
-import { Laptop, Moon, Sun } from 'lucide-react';
-
-import { Button } from '@/components/ui';
+} from '@/components/ui';
 import { THEME } from '@/constants';
 import { useThemeStore } from '@/store';
 
 export const ToggleTheme: FC = () => {
-  // Hooks
-  const { theme } = useThemeStore();
+  const { theme, setDarkTheme, setLightTheme, setSystemTheme } =
+    useThemeStore();
 
   // Effects
-  /** Handle dark theme */
   useEffect(() => {
     const finalTheme =
       theme === THEME.SYSTEM
@@ -39,21 +38,21 @@ export const ToggleTheme: FC = () => {
       case THEME.LIGHT:
         return (
           <>
-            <Sun />
+            <Sun className="mr-2 h-4 w-4" />
             Light
           </>
         );
       case THEME.DARK:
         return (
           <>
-            <Moon />
+            <Moon className="mr-2 h-4 w-4" />
             Dark
           </>
         );
       case THEME.SYSTEM:
         return (
           <>
-            <Laptop />
+            <Laptop className="mr-2 h-4 w-4" />
             System
           </>
         );
@@ -63,30 +62,24 @@ export const ToggleTheme: FC = () => {
   }, [theme]);
 
   return (
-    <div>
-      <DropdownMenu>
-        <DropdownMenuTrigger>
-          <Button variant="outline">{renderThemeButton()}</Button>
-        </DropdownMenuTrigger>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline">{renderThemeButton()}</Button>
+      </DropdownMenuTrigger>
 
-        <DropdownMenuContent>
-          <DropdownMenuItem>
-            <Button variant="outline">
-              <Sun /> Light
-            </Button>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Button variant="outline">
-              <Moon /> Dark
-            </Button>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Button variant="outline">
-              <Laptop /> System
-            </Button>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+      <DropdownMenuContent>
+        <DropdownMenuItem onSelect={setLightTheme}>
+          <Sun className="mr-2 h-4 w-4" /> Light
+        </DropdownMenuItem>
+
+        <DropdownMenuItem onSelect={setDarkTheme}>
+          <Moon className="mr-2 h-4 w-4" /> Dark
+        </DropdownMenuItem>
+
+        <DropdownMenuItem onSelect={setSystemTheme}>
+          <Laptop className="mr-2 h-4 w-4" /> System
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };

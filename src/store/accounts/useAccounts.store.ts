@@ -21,3 +21,5 @@ export const useAccountsStore = create<AccountsStore>((set) => ({
       };
     }),
 }));
+
+export const selectAccounts = (store: AccountsStore) => store.accounts;

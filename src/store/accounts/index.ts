@@ -1,1 +1,1 @@
-export { useAccountsStore } from './useAccounts.store';
+export { useAccountsStore, selectAccounts } from './useAccounts.store';

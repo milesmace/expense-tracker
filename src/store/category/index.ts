@@ -1,1 +1,1 @@
-export { useCategoryStore } from './useCategory.store';
+export { useCategoryStore, selectCategories } from './useCategory.store';

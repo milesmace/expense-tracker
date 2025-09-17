@@ -3,6 +3,7 @@ import { useEffect, type FC, type ReactNode } from 'react';
 import { SUPABASE_CONSTANTS } from '@/constants';
 import { DefaultLayout } from '@/layouts';
 import {
+  selectAccounts,
   selectAuth,
   useAccountsStore,
   useAuthStore,
@@ -13,8 +14,9 @@ import type { Account, Category } from '@/types';
 
 export const ProtectedRoute: FC<{ children?: ReactNode }> = ({ children }) => {
   const auth = useAuthStore(selectAuth);
-  const { accounts, addAccount } = useAccountsStore();
+  const { addAccount } = useAccountsStore();
   const { addCategory } = useCategoryStore();
+  const accounts = useAccountsStore(selectAccounts);
 
   // Fetch the data from supabase
   useEffect(() => {

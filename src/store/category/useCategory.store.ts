@@ -21,3 +21,5 @@ export const useCategoryStore = create<CategoryStore>((set) => ({
       };
     }),
 }));
+
+export const selectCategories = (store: CategoryStore) => store.categories;
