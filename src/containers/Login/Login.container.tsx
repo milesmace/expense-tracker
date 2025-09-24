@@ -16,7 +16,7 @@ export const Login: FC = () => {
           await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-              redirectTo: '/',
+              redirectTo: `${window.location.origin}/login`,
             },
           });
         },
@@ -28,6 +28,9 @@ export const Login: FC = () => {
         onClick: async () => {
           await supabase.auth.signInWithOAuth({
             provider: 'github',
+            options: {
+              redirectTo: `${window.location.origin}/login`,
+            },
           });
         },
       },
@@ -38,6 +41,9 @@ export const Login: FC = () => {
         onClick: async () => {
           await supabase.auth.signInWithOAuth({
             provider: 'discord',
+            options: {
+              redirectTo: `${window.location.origin}/login`,
+            },
           });
         },
       },

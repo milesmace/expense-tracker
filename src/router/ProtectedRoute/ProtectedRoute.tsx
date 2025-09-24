@@ -1,5 +1,5 @@
 import { useEffect, type FC } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 
 import { APP_ROUTES, SUPABASE_CONSTANTS } from '@/constants';
 import { DefaultLayout } from '@/layouts';
@@ -13,17 +13,9 @@ import { supabase } from '@/supabase';
 import type { Account, Category } from '@/types';
 
 export const ProtectedRoute: FC = () => {
-  const navigate = useNavigate();
   const auth = useAuthStore(selectAuth);
   const { addAccount } = useAccountsStore();
   const { addCategory } = useCategoryStore();
-
-  useEffect(() => {
-    // If not authenticated, then redirect to LOGIN
-    if (!auth) {
-      navigate(APP_ROUTES.LOGIN, { replace: true });
-    }
-  }, [auth, navigate]);
 
   // Fetch the data from supabase
   useEffect(() => {
@@ -57,6 +49,10 @@ export const ProtectedRoute: FC = () => {
       useCategoryStore.setState({ isLoading: false });
     })();
   }, [addAccount, addCategory]);
+
+  if (!auth.isLoggedIn) {
+    return <Navigate to={APP_ROUTES.LOGIN} />;
+  }
 
   return (
     <DefaultLayout>

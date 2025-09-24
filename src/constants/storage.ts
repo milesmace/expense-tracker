@@ -6,4 +6,4 @@ export const STORAGE = {
   AUTH: () =>
     `sb-${getEnv(SUPABASE_CONSTANTS.ENV.PROJECT_KEY, true)}-auth-token`,
   THEME: 'theme',
-};
+} as const;

@@ -9,7 +9,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist'] },
+  { ignores: ['dist', 'src/components/ui'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
@@ -46,6 +46,10 @@ export default tseslint.config(
       ],
       'arrow-body-style': ['error', 'as-needed'],
       'prettier/prettier': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       'import/order': [
         'error',
         {
@@ -64,6 +68,11 @@ export default tseslint.config(
               pattern: 'react{,-*,/**}',
               group: 'external',
               position: 'before',
+            },
+            {
+              pattern: '@supabase/**',
+              group: 'external',
+              position: 'after',
             },
             {
               pattern: '@/**',

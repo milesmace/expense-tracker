@@ -11,6 +11,7 @@ import {
 } from '@/components/ui';
 import { STORAGE, THEME } from '@/constants';
 import { useThemeStore } from '@/store';
+import type { Theme } from '@/types';
 import { saveToStorage } from '@/utils';
 
 export const ToggleTheme: FC = () => {
@@ -36,7 +37,7 @@ export const ToggleTheme: FC = () => {
   }, [theme]);
 
   // Callbacks
-  const renderThemeButton = useCallback(() => {
+  const renderThemeButton = useCallback((theme: Theme) => {
     switch (theme) {
       case THEME.LIGHT:
         return (
@@ -62,12 +63,12 @@ export const ToggleTheme: FC = () => {
       default:
         return null;
     }
-  }, [theme]);
+  }, []);
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">{renderThemeButton()}</Button>
+        <Button variant="outline">{renderThemeButton(theme)}</Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent>

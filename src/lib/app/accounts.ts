@@ -1,22 +1,22 @@
+import type { PostgrestError } from '@supabase/supabase-js';
+
 import { SUPABASE_CONSTANTS } from '@/constants';
 import { useAuthStore } from '@/store';
 import { supabase } from '@/supabase';
 import type { Account, Res } from '@/types';
-
-import type { PostgrestError } from '@supabase/supabase-js';
 
 export const createAccount = async (
   account: Omit<Account, 'id'>,
 ): Promise<Res<PostgrestError | object>> => {
   const { auth } = useAuthStore.getState();
 
-  if (!auth?.user) {
+  if (!auth.isLoggedIn) {
     throw new Error('User not logged in!!');
   }
 
   const {
     user: { id: userId },
-  } = auth;
+  } = auth.session;
 
   const { error } = await supabase
     .from(SUPABASE_CONSTANTS.TABLES.ACCOUNTS._)

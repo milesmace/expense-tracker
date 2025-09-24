@@ -68,7 +68,6 @@ export const NewExpenseContainer: FC = () => {
   const { categories, isLoading: isCategoriesLoading } = useCategoryStore();
 
   const onSubmit = async (data: NewExpenseFormType) => {
-    console.log(data);
     await createExpense({
       name: data.expenseName,
       amount: data.expenseAmount,
