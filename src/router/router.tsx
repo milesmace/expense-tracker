@@ -1,6 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 
-import { ExpensePage, HomePage, LoginPage } from '@/pages';
+import { ExpensePage, HomePage, IncomePage, LoginPage } from '@/pages';
 
 import { ProtectedRoute } from './ProtectedRoute';
 import { PublicRoute } from './PublicRoute';
@@ -17,6 +17,10 @@ export const router = createBrowserRouter([
       {
         path: '/expense',
         element: <ExpensePage />,
+      },
+      {
+        path: '/income',
+        element: <IncomePage />,
       },
     ],
   },

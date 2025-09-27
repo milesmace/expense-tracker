@@ -20,3 +20,12 @@ export type Expense = {
   category: number;
   from_account: number;
 };
+
+export type Income = {
+  id: number;
+  name: string;
+  amount: number;
+  description?: string;
+  category: number;
+  to_account: number;
+};

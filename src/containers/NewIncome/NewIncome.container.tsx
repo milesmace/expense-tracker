@@ -27,58 +27,77 @@ import {
   PopoverTrigger,
   Textarea,
 } from '@/components/ui';
-import { createExpense, getExpenseCategories } from '@/lib/app';
+import { useNotify } from '@/hooks';
+import { createIncome, getIncomeCategories } from '@/lib/app';
 import { cn } from '@/lib/utils';
 import { useAccountsStore, useCategoryStore } from '@/store';
 
-const newExpenseFormSchema = z.object({
-  expenseName: z.string().min(3, {
+const newIncomeFormSchema = z.object({
+  incomeName: z.string().min(3, {
     message: 'Expense name must be at least 3 characters.',
   }),
-  expenseDate: z
+  incomeDate: z
     .date({ message: 'Please provide a date of expense' })
     .max(new Date(), {
       message: 'Cannot create an expense with a future date.',
     }),
-  expenseAmount: z
+  incomeAmount: z
     .number()
     .min(0.01, { message: 'Amount must be greater than 0' }),
-  expenseCategory: z.number({ message: 'Please provide a valid category' }),
-  expenseFromAccount: z.number({
-    message: 'Please provide a valid from account',
+  incomeCategory: z.number({ message: 'Please provide a valid category' }),
+  incomeToAccount: z.number({
+    message: 'Please provide a valid to account',
   }),
-  expenseDescription: z.string().optional(),
+  incomeDescription: z.string().optional(),
 });
 
-type NewExpenseFormType = z.infer<typeof newExpenseFormSchema>;
+type NewIncomeFormType = z.infer<typeof newIncomeFormSchema>;
 
-export const NewExpenseContainer: FC = () => {
-  const form = useForm<NewExpenseFormType>({
-    resolver: zodResolver(newExpenseFormSchema),
+export const NewIncomeContainer: FC = () => {
+  const form = useForm<NewIncomeFormType>({
+    resolver: zodResolver(newIncomeFormSchema),
     defaultValues: {
-      expenseName: '',
-      expenseDate: undefined,
-      expenseAmount: undefined,
-      expenseDescription: '',
-      expenseCategory: undefined,
-      expenseFromAccount: undefined,
+      incomeName: '',
+      incomeDate: undefined,
+      incomeAmount: undefined,
+      incomeDescription: '',
+      incomeCategory: undefined,
+      incomeToAccount: undefined,
     },
   });
   const { accounts, isLoading: isAccountsLoading } = useAccountsStore();
   const { categories, isLoading: isCategoriesLoading } = useCategoryStore();
+  const notify = useNotify();
 
-  const onSubmit = async (data: NewExpenseFormType) => {
-    await createExpense({
-      name: data.expenseName,
-      amount: data.expenseAmount,
-      category: data.expenseCategory,
-      from_account: data.expenseFromAccount,
+  const onSubmit = async (data: NewIncomeFormType) => {
+    // Create the Income Record
+    const { success } = await createIncome({
+      name: data.incomeName,
+      amount: data.incomeAmount,
+      category: data.incomeCategory,
+      to_account: data.incomeToAccount,
     });
+
+    if (success) {
+      // Show a success notification
+      notify({
+        title: 'Income Created Successfully',
+        type: 'success',
+      });
+
+      // Reset the form
+      form.reset();
+    } else {
+      notify({
+        title: 'Cannot create Income',
+        type: 'error',
+      });
+    }
   };
 
   return (
     <div className="my-12">
-      <h1 className="mb-8 text-2xl font-bold">New Expense</h1>
+      <h1 className="mb-8 text-2xl font-bold">New Income</h1>
 
       <Form {...form}>
         <form
@@ -88,12 +107,12 @@ export const NewExpenseContainer: FC = () => {
           <div className="flex flex-col gap-6">
             <FormField
               control={form.control}
-              name="expenseName"
+              name="incomeName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Daily Commute..." {...field} />
+                    <Input placeholder="Company Salary..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -102,7 +121,7 @@ export const NewExpenseContainer: FC = () => {
 
             <FormField
               control={form.control}
-              name="expenseAmount"
+              name="incomeAmount"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Amount</FormLabel>
@@ -135,7 +154,7 @@ export const NewExpenseContainer: FC = () => {
             <div className="flex gap-4">
               <FormField
                 control={form.control}
-                name="expenseDate"
+                name="incomeDate"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Date</FormLabel>
@@ -179,7 +198,7 @@ export const NewExpenseContainer: FC = () => {
 
               <FormField
                 control={form.control}
-                name="expenseCategory"
+                name="incomeCategory"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
@@ -214,17 +233,14 @@ export const NewExpenseContainer: FC = () => {
                             <CommandEmpty>No category found.</CommandEmpty>
                             <CommandGroup>
                               {Object.entries(
-                                getExpenseCategories(Object.values(categories)),
+                                getIncomeCategories(Object.values(categories)),
                               ).map(([_, category]) => (
                                 <CommandItem
                                   key={category.id}
                                   value={category.name.toLowerCase()}
                                   className="cursor-pointer"
                                   onSelect={() =>
-                                    form.setValue(
-                                      'expenseCategory',
-                                      category.id,
-                                    )
+                                    form.setValue('incomeCategory', category.id)
                                   }
                                 >
                                   {category.name}
@@ -242,10 +258,10 @@ export const NewExpenseContainer: FC = () => {
 
               <FormField
                 control={form.control}
-                name="expenseFromAccount"
+                name="incomeToAccount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>From Account</FormLabel>
+                    <FormLabel>To Account</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -282,10 +298,7 @@ export const NewExpenseContainer: FC = () => {
                                   value={account.name.toLowerCase()}
                                   className="cursor-pointer"
                                   onSelect={() =>
-                                    form.setValue(
-                                      'expenseFromAccount',
-                                      account.id,
-                                    )
+                                    form.setValue('incomeToAccount', account.id)
                                   }
                                 >
                                   {account.name}
@@ -304,13 +317,13 @@ export const NewExpenseContainer: FC = () => {
 
             <FormField
               control={form.control}
-              name="expenseDescription"
+              name="incomeDescription"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Their service was very luxury..."
+                      placeholder="Month start feels good with money..."
                       {...field}
                     />
                   </FormControl>
@@ -321,7 +334,7 @@ export const NewExpenseContainer: FC = () => {
           </div>
 
           <Button type="submit" className="cursor-pointer">
-            Add Expense
+            Add Income
           </Button>
         </form>
       </Form>

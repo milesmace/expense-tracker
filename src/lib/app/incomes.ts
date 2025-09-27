@@ -3,10 +3,10 @@ import type { PostgrestError } from '@supabase/supabase-js';
 import { SUPABASE_CONSTANTS } from '@/constants';
 import { useAuthStore } from '@/store';
 import { supabase } from '@/supabase';
-import type { Expense, Res } from '@/types';
+import type { Income, Res } from '@/types';
 
-export const createExpense = async (
-  expense: Omit<Expense, 'id'>,
+export const createIncome = async (
+  income: Omit<Income, 'id'>,
 ): Promise<Res<PostgrestError | object>> => {
   const { auth } = useAuthStore.getState();
 
@@ -19,23 +19,23 @@ export const createExpense = async (
   } = auth.session;
 
   const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.EXPENSES._)
-    .insert({ ...expense, user_id: userId });
+    .from(SUPABASE_CONSTANTS.TABLES.INCOMES._)
+    .insert({ ...income, user_id: userId });
 
   return {
     success: !error,
-    data: error ?? 'Category created successfully',
+    data: error?.message ?? 'Category created successfully',
   };
 };
 
-export const updateExpense = async (
+export const updateIncome = async (
   expenseId: number,
-  expense: Partial<Omit<Expense, 'id'>>,
+  expense: Partial<Omit<Income, 'id'>>,
 ): Promise<Res<PostgrestError | object>> => {
   const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.EXPENSES._)
+    .from(SUPABASE_CONSTANTS.TABLES.INCOMES._)
     .update({ ...expense })
-    .eq(SUPABASE_CONSTANTS.TABLES.EXPENSES.ID, expenseId);
+    .eq(SUPABASE_CONSTANTS.TABLES.INCOMES.ID, expenseId);
 
   return {
     success: !error,
@@ -43,16 +43,16 @@ export const updateExpense = async (
   };
 };
 
-export const deleteExpense = async (
-  expenseId: number,
+export const deleteIncome = async (
+  incomeId: number,
 ): Promise<Res<PostgrestError | object>> => {
   const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.EXPENSES._)
+    .from(SUPABASE_CONSTANTS.TABLES.INCOMES._)
     .delete()
-    .eq(SUPABASE_CONSTANTS.TABLES.EXPENSES.ID, expenseId);
+    .eq(SUPABASE_CONSTANTS.TABLES.INCOMES.ID, incomeId);
 
   return {
     success: !error,
-    data: error ?? 'Expense deleted succesffully',
+    data: error ?? 'Income deleted succesffully',
   };
 };
