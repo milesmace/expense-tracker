@@ -29,3 +29,12 @@ export type Income = {
   category: number;
   to_account: number;
 };
+
+export type Transaction = {
+  id: number;
+  name: string;
+  amount: number;
+  description?: string;
+  from_account: number;
+  to_account: number;
+};

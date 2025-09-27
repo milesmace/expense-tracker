@@ -6,6 +6,8 @@ import { format } from 'date-fns';
 import { Calendar1, ChevronsUpDownIcon } from 'lucide-react';
 import { z } from 'zod';
 
+import { PostgrestError } from '@supabase/supabase-js';
+
 import {
   Button,
   Calendar,
@@ -28,60 +30,70 @@ import {
   Textarea,
 } from '@/components/ui';
 import { useNotify } from '@/hooks';
-import { createExpense, getExpenseCategories } from '@/lib/app';
+import { createTransaction } from '@/lib/app';
 import { cn } from '@/lib/utils';
-import { useAccountsStore, useCategoryStore } from '@/store';
+import { useAccountsStore } from '@/store';
 
-const newExpenseFormSchema = z.object({
-  expenseName: z.string().min(3, {
-    message: 'Expense name must be at least 3 characters.',
+const newTransactionFormSchema = z.object({
+  transactionName: z.string().min(3, {
+    message: 'Transaction name must be at least 3 characters.',
   }),
-  expenseDate: z
-    .date({ message: 'Please provide a date of expense' })
+  transactionDate: z
+    .date({ message: 'Please provide a date of transaction' })
     .max(new Date(), {
-      message: 'Cannot create an expense with a future date.',
+      message: 'Cannot create an transaction with a future date.',
     }),
-  expenseAmount: z
+  transactionAmount: z
     .number()
     .min(0.01, { message: 'Amount must be greater than 0' }),
-  expenseCategory: z.number({ message: 'Please provide a valid category' }),
-  expenseFromAccount: z.number({
+  transactionFromAccount: z.number({
     message: 'Please provide a valid from account',
   }),
-  expenseDescription: z.string().optional(),
+  transactionToAccount: z.number({
+    message: 'Please provide a valid to account',
+  }),
+  transactionDescription: z.string().optional(),
 });
 
-type NewExpenseFormType = z.infer<typeof newExpenseFormSchema>;
+type NewTransactionFormType = z.infer<typeof newTransactionFormSchema>;
 
-export const NewExpenseContainer: FC = () => {
-  const form = useForm<NewExpenseFormType>({
-    resolver: zodResolver(newExpenseFormSchema),
+export const NewTransactionContainer: FC = () => {
+  const form = useForm<NewTransactionFormType>({
+    resolver: zodResolver(newTransactionFormSchema),
     defaultValues: {
-      expenseName: '',
-      expenseDate: undefined,
-      expenseAmount: undefined,
-      expenseDescription: '',
-      expenseCategory: undefined,
-      expenseFromAccount: undefined,
+      transactionName: '',
+      transactionDate: undefined,
+      transactionAmount: undefined,
+      transactionDescription: '',
+      transactionFromAccount: undefined,
+      transactionToAccount: undefined,
     },
   });
   const { accounts, isLoading: isAccountsLoading } = useAccountsStore();
-  const { categories, isLoading: isCategoriesLoading } = useCategoryStore();
   const notify = useNotify();
 
-  const onSubmit = async (data: NewExpenseFormType) => {
-    // Create the Expense Record
-    const { success } = await createExpense({
-      name: data.expenseName,
-      amount: data.expenseAmount,
-      category: data.expenseCategory,
-      from_account: data.expenseFromAccount,
+  const onSubmit = async (data: NewTransactionFormType) => {
+    // Check if the from account & to account are the same
+    if (data.transactionFromAccount === data.transactionToAccount) {
+      notify({
+        title: 'From Account & To Account should not be the same',
+        type: 'error',
+      });
+      return;
+    }
+
+    // Create the Transaction Record
+    const { success } = await createTransaction({
+      name: data.transactionName,
+      amount: data.transactionAmount,
+      from_account: data.transactionFromAccount,
+      to_account: data.transactionToAccount,
     });
 
     if (success) {
       // Show a success notification
       notify({
-        title: 'Expense Created Successfully',
+        title: 'Transaction created successfully',
         type: 'success',
       });
 
@@ -89,7 +101,7 @@ export const NewExpenseContainer: FC = () => {
       form.reset();
     } else {
       notify({
-        title: 'Cannot create Expense',
+        title: 'Cannot create Transaction',
         type: 'error',
       });
     }
@@ -97,7 +109,7 @@ export const NewExpenseContainer: FC = () => {
 
   return (
     <div className="my-12">
-      <h1 className="mb-8 text-2xl font-bold">New Expense</h1>
+      <h1 className="mb-8 text-2xl font-bold">New Transaction</h1>
 
       <Form {...form}>
         <form
@@ -107,12 +119,12 @@ export const NewExpenseContainer: FC = () => {
           <div className="flex flex-col gap-6">
             <FormField
               control={form.control}
-              name="expenseName"
+              name="transactionName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Daily Commute..." {...field} />
+                    <Input placeholder="Cash withdrawl..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -121,7 +133,7 @@ export const NewExpenseContainer: FC = () => {
 
             <FormField
               control={form.control}
-              name="expenseAmount"
+              name="transactionAmount"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Amount</FormLabel>
@@ -134,6 +146,7 @@ export const NewExpenseContainer: FC = () => {
                         type="number"
                         placeholder="0.00"
                         step="0.01"
+                        min={0}
                         className="pl-6"
                         {...field}
                         value={field.value ?? ''}
@@ -154,7 +167,7 @@ export const NewExpenseContainer: FC = () => {
             <div className="flex gap-4">
               <FormField
                 control={form.control}
-                name="expenseDate"
+                name="transactionDate"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Date</FormLabel>
@@ -198,70 +211,7 @@ export const NewExpenseContainer: FC = () => {
 
               <FormField
                 control={form.control}
-                name="expenseCategory"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="flex w-max min-w-60 justify-between gap-2"
-                        >
-                          <span
-                            className={cn(
-                              !field.value && 'text-muted-foreground',
-                            )}
-                          >
-                            {isCategoriesLoading
-                              ? 'Loading categories...'
-                              : field.value
-                                ? (categories[field.value]?.name ??
-                                  'Unknown category')
-                                : 'Select a category'}
-                          </span>
-                          <ChevronsUpDownIcon />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-max p-0">
-                        <Command>
-                          <CommandInput
-                            placeholder="Search categories..."
-                            disabled={isCategoriesLoading}
-                          />
-                          <CommandList>
-                            <CommandEmpty>No category found.</CommandEmpty>
-                            <CommandGroup>
-                              {Object.entries(
-                                getExpenseCategories(Object.values(categories)),
-                              ).map(([_, category]) => (
-                                <CommandItem
-                                  key={category.id}
-                                  value={category.name.toLowerCase()}
-                                  className="cursor-pointer"
-                                  onSelect={() =>
-                                    form.setValue(
-                                      'expenseCategory',
-                                      category.id,
-                                    )
-                                  }
-                                >
-                                  {category.name}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="expenseFromAccount"
+                name="transactionFromAccount"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>From Account</FormLabel>
@@ -302,7 +252,68 @@ export const NewExpenseContainer: FC = () => {
                                   className="cursor-pointer"
                                   onSelect={() =>
                                     form.setValue(
-                                      'expenseFromAccount',
+                                      'transactionFromAccount',
+                                      account.id,
+                                    )
+                                  }
+                                >
+                                  {account.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="transactionToAccount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>To Account</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="flex w-max min-w-60 justify-between gap-2"
+                        >
+                          <span
+                            className={cn(
+                              !field.value && 'text-muted-foreground',
+                            )}
+                          >
+                            {isAccountsLoading
+                              ? 'Loading accounts...'
+                              : field.value
+                                ? (accounts[field.value]?.name ??
+                                  'Unknown account')
+                                : 'Select a account'}
+                          </span>
+                          <ChevronsUpDownIcon />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-max p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search accounts..."
+                            disabled={isAccountsLoading}
+                          />
+                          <CommandList>
+                            <CommandEmpty>No account found.</CommandEmpty>
+                            <CommandGroup>
+                              {Object.entries(accounts).map(([_, account]) => (
+                                <CommandItem
+                                  key={account.id}
+                                  value={account.name.toLowerCase()}
+                                  className="cursor-pointer"
+                                  onSelect={() =>
+                                    form.setValue(
+                                      'transactionToAccount',
                                       account.id,
                                     )
                                   }
@@ -323,15 +334,12 @@ export const NewExpenseContainer: FC = () => {
 
             <FormField
               control={form.control}
-              name="expenseDescription"
+              name="transactionDescription"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Their service was very luxury..."
-                      {...field}
-                    />
+                    <Textarea placeholder="Cash feels good..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -340,7 +348,7 @@ export const NewExpenseContainer: FC = () => {
           </div>
 
           <Button type="submit" className="cursor-pointer">
-            Add Expense
+            Add Transaction
           </Button>
         </form>
       </Form>
