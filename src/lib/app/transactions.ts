@@ -8,7 +8,6 @@ import type { Res, Transaction } from '@/types';
 export const createTransaction = async (
   transaction: Omit<Transaction, 'id'>,
 ): Promise<Res<PostgrestError>> => {
-  console.log('creating transaction...');
   const { auth } = useAuthStore.getState();
 
   if (!auth.isLoggedIn) {
