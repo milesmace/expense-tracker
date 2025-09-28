@@ -6,8 +6,10 @@ import type { Theme } from '@/types';
 import { loadFromStorage } from '@/utils';
 
 type ThemeStore = {
+  // State
   theme: Theme;
 
+  // Reducers
   setLightTheme: () => void;
   setDarkTheme: () => void;
   setSystemTheme: () => void;

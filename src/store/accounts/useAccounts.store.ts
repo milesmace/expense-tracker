@@ -5,9 +5,11 @@ import type { Account } from '@/types';
 import { type AccountsStore } from './useAccounts.store.types';
 
 export const useAccountsStore = create<AccountsStore>((set) => ({
+  // State
   accounts: {},
   isLoading: false,
 
+  // Reducers
   addAccount: (account: Account) =>
     set((state) => ({
       accounts: { ...state.accounts, [account.id]: account },
@@ -23,4 +25,5 @@ export const useAccountsStore = create<AccountsStore>((set) => ({
     }),
 }));
 
+// Account Selector
 export const selectAccounts = (store: AccountsStore) => store.accounts;

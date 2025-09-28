@@ -50,6 +50,7 @@ export const Login: FC = () => {
     ],
     [],
   );
+
   return (
     <div className="bg-background/80 flex h-full flex-col items-center justify-center gap-8 rounded-lg border px-8 py-12 shadow-lg">
       {/* Title */}
