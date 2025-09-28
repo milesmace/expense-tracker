@@ -1,4 +1,4 @@
-import { type FC } from 'react';
+import { useCallback, type FC } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -54,6 +54,7 @@ const newIncomeFormSchema = z.object({
 type NewIncomeFormType = z.infer<typeof newIncomeFormSchema>;
 
 export const NewIncomeContainer: FC = () => {
+  // Hooks
   const form = useForm<NewIncomeFormType>({
     resolver: zodResolver(newIncomeFormSchema),
     defaultValues: {
@@ -69,31 +70,35 @@ export const NewIncomeContainer: FC = () => {
   const { categories, isLoading: isCategoriesLoading } = useCategoryStore();
   const notify = useNotify();
 
-  const onSubmit = async (data: NewIncomeFormType) => {
-    // Create the Income Record
-    const { success } = await createIncome({
-      name: data.incomeName,
-      amount: data.incomeAmount,
-      category: data.incomeCategory,
-      to_account: data.incomeToAccount,
-    });
-
-    if (success) {
-      // Show a success notification
-      notify({
-        title: 'Income Created Successfully',
-        type: 'success',
+  // Callbacks
+  const onSubmit = useCallback(
+    async (data: NewIncomeFormType) => {
+      // Create the Income Record
+      const { success } = await createIncome({
+        name: data.incomeName,
+        amount: data.incomeAmount,
+        category: data.incomeCategory,
+        to_account: data.incomeToAccount,
       });
 
-      // Reset the form
-      form.reset();
-    } else {
-      notify({
-        title: 'Cannot create Income',
-        type: 'error',
-      });
-    }
-  };
+      if (success) {
+        // Show a success notification
+        notify({
+          title: 'Income Created Successfully',
+          type: 'success',
+        });
+
+        // Reset the form
+        form.reset();
+      } else {
+        notify({
+          title: 'Cannot create Income',
+          type: 'error',
+        });
+      }
+    },
+    [form, notify],
+  );
 
   return (
     <div className="my-12">
@@ -278,7 +283,7 @@ export const NewIncomeContainer: FC = () => {
                               : field.value
                                 ? (accounts[field.value]?.name ??
                                   'Unknown account')
-                                : 'Select a account'}
+                                : 'Select an account'}
                           </span>
                           <ChevronsUpDownIcon />
                         </Button>

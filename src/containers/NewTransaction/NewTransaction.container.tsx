@@ -1,12 +1,10 @@
-import { type FC } from 'react';
+import { useCallback, type FC } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { Calendar1, ChevronsUpDownIcon } from 'lucide-react';
 import { z } from 'zod';
-
-import { PostgrestError } from '@supabase/supabase-js';
 
 import {
   Button,
@@ -58,6 +56,7 @@ const newTransactionFormSchema = z.object({
 type NewTransactionFormType = z.infer<typeof newTransactionFormSchema>;
 
 export const NewTransactionContainer: FC = () => {
+  // Hooks
   const form = useForm<NewTransactionFormType>({
     resolver: zodResolver(newTransactionFormSchema),
     defaultValues: {
@@ -72,40 +71,44 @@ export const NewTransactionContainer: FC = () => {
   const { accounts, isLoading: isAccountsLoading } = useAccountsStore();
   const notify = useNotify();
 
-  const onSubmit = async (data: NewTransactionFormType) => {
-    // Check if the from account & to account are the same
-    if (data.transactionFromAccount === data.transactionToAccount) {
-      notify({
-        title: 'From Account & To Account should not be the same',
-        type: 'error',
-      });
-      return;
-    }
+  // Callbacks
+  const onSubmit = useCallback(
+    async (data: NewTransactionFormType) => {
+      // Check if the from account & to account are the same
+      if (data.transactionFromAccount === data.transactionToAccount) {
+        notify({
+          title: 'From Account & To Account should not be the same',
+          type: 'error',
+        });
+        return;
+      }
 
-    // Create the Transaction Record
-    const { success } = await createTransaction({
-      name: data.transactionName,
-      amount: data.transactionAmount,
-      from_account: data.transactionFromAccount,
-      to_account: data.transactionToAccount,
-    });
-
-    if (success) {
-      // Show a success notification
-      notify({
-        title: 'Transaction created successfully',
-        type: 'success',
+      // Create the Transaction Record
+      const { success } = await createTransaction({
+        name: data.transactionName,
+        amount: data.transactionAmount,
+        from_account: data.transactionFromAccount,
+        to_account: data.transactionToAccount,
       });
 
-      // Reset the form
-      form.reset();
-    } else {
-      notify({
-        title: 'Cannot create Transaction',
-        type: 'error',
-      });
-    }
-  };
+      if (success) {
+        // Show a success notification
+        notify({
+          title: 'Transaction created successfully',
+          type: 'success',
+        });
+
+        // Reset the form
+        form.reset();
+      } else {
+        notify({
+          title: 'Cannot create Transaction',
+          type: 'error',
+        });
+      }
+    },
+    [form, notify],
+  );
 
   return (
     <div className="my-12">
@@ -231,7 +234,7 @@ export const NewTransactionContainer: FC = () => {
                               : field.value
                                 ? (accounts[field.value]?.name ??
                                   'Unknown account')
-                                : 'Select a account'}
+                                : 'Select an account'}
                           </span>
                           <ChevronsUpDownIcon />
                         </Button>
@@ -292,7 +295,7 @@ export const NewTransactionContainer: FC = () => {
                               : field.value
                                 ? (accounts[field.value]?.name ??
                                   'Unknown account')
-                                : 'Select a account'}
+                                : 'Select an account'}
                           </span>
                           <ChevronsUpDownIcon />
                         </Button>

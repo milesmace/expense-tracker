@@ -1,4 +1,4 @@
-import { type FC } from 'react';
+import { useCallback, type FC } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -54,6 +54,7 @@ const newExpenseFormSchema = z.object({
 type NewExpenseFormType = z.infer<typeof newExpenseFormSchema>;
 
 export const NewExpenseContainer: FC = () => {
+  // Hooks
   const form = useForm<NewExpenseFormType>({
     resolver: zodResolver(newExpenseFormSchema),
     defaultValues: {
@@ -69,31 +70,35 @@ export const NewExpenseContainer: FC = () => {
   const { categories, isLoading: isCategoriesLoading } = useCategoryStore();
   const notify = useNotify();
 
-  const onSubmit = async (data: NewExpenseFormType) => {
-    // Create the Expense Record
-    const { success } = await createExpense({
-      name: data.expenseName,
-      amount: data.expenseAmount,
-      category: data.expenseCategory,
-      from_account: data.expenseFromAccount,
-    });
-
-    if (success) {
-      // Show a success notification
-      notify({
-        title: 'Expense Created Successfully',
-        type: 'success',
+  // Callbacks
+  const onSubmit = useCallback(
+    async (data: NewExpenseFormType) => {
+      // Create the Expense Record
+      const { success } = await createExpense({
+        name: data.expenseName,
+        amount: data.expenseAmount,
+        category: data.expenseCategory,
+        from_account: data.expenseFromAccount,
       });
 
-      // Reset the form
-      form.reset();
-    } else {
-      notify({
-        title: 'Cannot create Expense',
-        type: 'error',
-      });
-    }
-  };
+      if (success) {
+        // Show a success notification
+        notify({
+          title: 'Expense Created Successfully',
+          type: 'success',
+        });
+
+        // Reset the form
+        form.reset();
+      } else {
+        notify({
+          title: 'Cannot create Expense',
+          type: 'error',
+        });
+      }
+    },
+    [form, notify],
+  );
 
   return (
     <div className="my-12">
@@ -281,7 +286,7 @@ export const NewExpenseContainer: FC = () => {
                               : field.value
                                 ? (accounts[field.value]?.name ??
                                   'Unknown account')
-                                : 'Select a account'}
+                                : 'Select an account'}
                           </span>
                           <ChevronsUpDownIcon />
                         </Button>

@@ -15,6 +15,7 @@ import type { Theme } from '@/types';
 import { saveToStorage } from '@/utils';
 
 export const ToggleTheme: FC = () => {
+  // Hooks
   const { theme, setDarkTheme, setLightTheme, setSystemTheme } =
     useThemeStore();
 
