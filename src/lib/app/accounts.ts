@@ -1,58 +1,53 @@
-import type { PostgrestError } from '@supabase/supabase-js';
-
 import { SUPABASE_CONSTANTS } from '@/constants';
-import { useAuthStore } from '@/store';
+import { authQuery } from '@/services';
 import { supabase } from '@/supabase';
-import type { Account, Res } from '@/types';
+import type { Account } from '@/types';
 
-export const createAccount = async (
-  account: Omit<Account, 'id'>,
-): Promise<Res<PostgrestError | object>> => {
-  const { auth } = useAuthStore.getState();
+export const fetchAccounts = () =>
+  authQuery(async (userId) => {
+    const { error, data: accounts } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.ACCOUNTS._)
+      .select()
+      .eq(SUPABASE_CONSTANTS.TABLES.ACCOUNTS.USER_ID, userId);
 
-  if (!auth.isLoggedIn) {
-    throw new Error('User not logged in!!');
-  }
+    if (error) throw new Error(error.message);
+    return accounts as Account[];
+  });
 
-  const {
-    user: { id: userId },
-  } = auth.session;
+export const createAccount = (account: Omit<Account, 'id'>) =>
+  authQuery(async (userId) => {
+    const { error } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.ACCOUNTS._)
+      .insert({ ...account, user_id: userId });
 
-  const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.ACCOUNTS._)
-    .insert({ ...account, user_id: userId });
+    if (error) throw new Error(error.message);
+    return null;
+  });
 
-  return {
-    success: !error,
-    data: error ?? 'Account created successfully',
-  };
-};
+export const updateAccount = ({
+  account,
+  accountId,
+}: {
+  accountId: number;
+  account: Partial<Omit<Account, 'id'>>;
+}) =>
+  authQuery(async () => {
+    const { error } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.ACCOUNTS._)
+      .update({ ...account })
+      .eq(SUPABASE_CONSTANTS.TABLES.ACCOUNTS.ID, accountId);
 
-export const updateAccount = async (
-  accountId: number,
-  account: Partial<Omit<Account, 'id'>>,
-): Promise<Res<PostgrestError | object>> => {
-  const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.ACCOUNTS._)
-    .update({ ...account })
-    .eq(SUPABASE_CONSTANTS.TABLES.ACCOUNTS.ID, accountId);
+    if (error) throw new Error(error.message);
+    return null;
+  });
 
-  return {
-    success: !error,
-    data: error ?? 'Account updated successfully',
-  };
-};
+export const deleteAccount = (accountId: number) =>
+  authQuery(async () => {
+    const { error } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.ACCOUNTS._)
+      .delete()
+      .eq(SUPABASE_CONSTANTS.TABLES.ACCOUNTS.ID, accountId);
 
-export const deleteAccount = async (
-  accountId: number,
-): Promise<Res<PostgrestError | object>> => {
-  const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.ACCOUNTS._)
-    .delete()
-    .eq(SUPABASE_CONSTANTS.TABLES.ACCOUNTS.ID, accountId);
-
-  return {
-    success: !error,
-    data: error ?? 'Account deleted succesffully',
-  };
-};
+    if (error) throw new Error(error.message);
+    return null;
+  });

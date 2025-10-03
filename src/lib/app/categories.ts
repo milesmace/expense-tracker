@@ -1,58 +1,57 @@
-import type { PostgrestError } from '@supabase/supabase-js';
-
 import { SUPABASE_CONSTANTS } from '@/constants';
-import { useAuthStore } from '@/store';
+import { authQuery } from '@/services';
 import { supabase } from '@/supabase';
-import type { Category, Res } from '@/types';
+import type { Category } from '@/types';
 
-export const createCategory = async (
-  category: Omit<Category, 'id'>,
-): Promise<Res<PostgrestError | object>> => {
-  const { auth } = useAuthStore.getState();
+// Fetch all categories for the logged-in user
+export const fetchCategories = () =>
+  authQuery(async (userId) => {
+    const { error, data: categories } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.CATEGORIES._)
+      .select()
+      .eq(SUPABASE_CONSTANTS.TABLES.CATEGORIES.USER_ID, userId);
 
-  if (!auth.isLoggedIn) {
-    throw new Error('User not logged in!!');
-  }
+    if (error) throw new Error(error.message);
+    return categories as Category[];
+  });
 
-  const {
-    user: { id: userId },
-  } = auth.session;
+// Create a new category
+export const createCategory = (category: Omit<Category, 'id'>) =>
+  authQuery(async (userId) => {
+    const { error } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.CATEGORIES._)
+      .insert({ ...category, user_id: userId });
 
-  const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.CATEGORIES._)
-    .insert({ ...category, user_id: userId });
+    if (error) throw new Error(error.message);
+    return null;
+  });
 
-  return {
-    success: !error,
-    data: error ?? 'Category created successfully',
-  };
-};
+// Update an existing category
+export const updateCategory = ({
+  categoryId,
+  category,
+}: {
+  categoryId: number;
+  category: Partial<Omit<Category, 'id'>>;
+}) =>
+  authQuery(async () => {
+    const { error } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.CATEGORIES._)
+      .update({ ...category })
+      .eq(SUPABASE_CONSTANTS.TABLES.CATEGORIES.ID, categoryId);
 
-export const updateCategory = async (
-  categoryId: number,
-  Category: Partial<Omit<Category, 'id'>>,
-): Promise<Res<PostgrestError | object>> => {
-  const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.CATEGORIES._)
-    .update({ ...Category })
-    .eq(SUPABASE_CONSTANTS.TABLES.CATEGORIES.ID, categoryId);
+    if (error) throw new Error(error.message);
+    return null;
+  });
 
-  return {
-    success: !error,
-    data: error ?? 'Category updated successfully',
-  };
-};
+// Delete a category
+export const deleteCategory = (categoryId: number) =>
+  authQuery(async () => {
+    const { error } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.CATEGORIES._)
+      .delete()
+      .eq(SUPABASE_CONSTANTS.TABLES.CATEGORIES.ID, categoryId);
 
-export const deleteCategory = async (
-  categoryId: number,
-): Promise<Res<PostgrestError | object>> => {
-  const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.CATEGORIES._)
-    .delete()
-    .eq(SUPABASE_CONSTANTS.TABLES.CATEGORIES.ID, categoryId);
-
-  return {
-    success: !error,
-    data: error ?? 'Category deleted succesffully',
-  };
-};
+    if (error) throw new Error(error.message);
+    return null;
+  });

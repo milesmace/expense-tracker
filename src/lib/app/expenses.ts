@@ -1,58 +1,57 @@
-import type { PostgrestError } from '@supabase/supabase-js';
-
 import { SUPABASE_CONSTANTS } from '@/constants';
-import { useAuthStore } from '@/store';
+import { authQuery } from '@/services';
 import { supabase } from '@/supabase';
-import type { Expense, Res } from '@/types';
+import type { Expense } from '@/types';
 
-export const createExpense = async (
-  expense: Omit<Expense, 'id'>,
-): Promise<Res<PostgrestError | object>> => {
-  const { auth } = useAuthStore.getState();
+// Fetch all expenses for the logged-in user
+export const fetchExpenses = () =>
+  authQuery(async (userId) => {
+    const { error, data: expenses } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.EXPENSES._)
+      .select()
+      .eq(SUPABASE_CONSTANTS.TABLES.EXPENSES.USER_ID, userId);
 
-  if (!auth.isLoggedIn) {
-    throw new Error('User not logged in!!');
-  }
+    if (error) throw new Error(error.message);
+    return expenses as Expense[];
+  });
 
-  const {
-    user: { id: userId },
-  } = auth.session;
+// Create a new expense
+export const createExpense = (expense: Omit<Expense, 'id'>) =>
+  authQuery(async (userId) => {
+    const { error } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.EXPENSES._)
+      .insert({ ...expense, user_id: userId });
 
-  const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.EXPENSES._)
-    .insert({ ...expense, user_id: userId });
+    if (error) throw new Error(error.message);
+    return null;
+  });
 
-  return {
-    success: !error,
-    data: error ?? 'Category created successfully',
-  };
-};
+// Update an existing expense
+export const updateExpense = ({
+  expenseId,
+  expense,
+}: {
+  expenseId: number;
+  expense: Partial<Omit<Expense, 'id'>>;
+}) =>
+  authQuery(async () => {
+    const { error } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.EXPENSES._)
+      .update({ ...expense })
+      .eq(SUPABASE_CONSTANTS.TABLES.EXPENSES.ID, expenseId);
 
-export const updateExpense = async (
-  expenseId: number,
-  expense: Partial<Omit<Expense, 'id'>>,
-): Promise<Res<PostgrestError | object>> => {
-  const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.EXPENSES._)
-    .update({ ...expense })
-    .eq(SUPABASE_CONSTANTS.TABLES.EXPENSES.ID, expenseId);
+    if (error) throw new Error(error.message);
+    return null;
+  });
 
-  return {
-    success: !error,
-    data: error ?? 'Expense updated successfully',
-  };
-};
+// Delete an expense
+export const deleteExpense = (expenseId: number) =>
+  authQuery(async () => {
+    const { error } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.EXPENSES._)
+      .delete()
+      .eq(SUPABASE_CONSTANTS.TABLES.EXPENSES.ID, expenseId);
 
-export const deleteExpense = async (
-  expenseId: number,
-): Promise<Res<PostgrestError | object>> => {
-  const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.EXPENSES._)
-    .delete()
-    .eq(SUPABASE_CONSTANTS.TABLES.EXPENSES.ID, expenseId);
-
-  return {
-    success: !error,
-    data: error ?? 'Expense deleted succesffully',
-  };
-};
+    if (error) throw new Error(error.message);
+    return null;
+  });

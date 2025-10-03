@@ -28,8 +28,9 @@ import {
   Textarea,
 } from '@/components/ui';
 import { useNotify } from '@/hooks';
-import { createExpense, getExpenseCategories } from '@/lib/app';
+import { getExpenseCategories } from '@/lib/app';
 import { cn } from '@/lib/utils';
+import { useExpensesApi } from '@/services';
 import { useAccountsStore, useCategoryStore } from '@/store';
 
 const newExpenseFormSchema = z.object({
@@ -69,19 +70,22 @@ export const NewExpenseContainer: FC = () => {
   const { accounts, isLoading: isAccountsLoading } = useAccountsStore();
   const { categories, isLoading: isCategoriesLoading } = useCategoryStore();
   const notify = useNotify();
+  const {
+    addExpenseMutation: { mutateAsync: addExpense },
+  } = useExpensesApi();
 
   // Callbacks
   const onSubmit = useCallback(
     async (data: NewExpenseFormType) => {
-      // Create the Expense Record
-      const { success } = await createExpense({
-        name: data.expenseName,
-        amount: data.expenseAmount,
-        category: data.expenseCategory,
-        from_account: data.expenseFromAccount,
-      });
+      try {
+        // Create the Expense Record
+        await addExpense({
+          name: data.expenseName,
+          amount: data.expenseAmount,
+          category: data.expenseCategory,
+          from_account: data.expenseFromAccount,
+        });
 
-      if (success) {
         // Show a success notification
         notify({
           title: 'Expense Created Successfully',
@@ -90,14 +94,14 @@ export const NewExpenseContainer: FC = () => {
 
         // Reset the form
         form.reset();
-      } else {
+      } catch (e) {
         notify({
-          title: 'Cannot create Expense',
+          title: (e as Error).message ?? 'Cannot create Expense',
           type: 'error',
         });
       }
     },
-    [form, notify],
+    [form, notify, addExpense],
   );
 
   return (
