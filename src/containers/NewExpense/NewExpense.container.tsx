@@ -27,8 +27,9 @@ import {
   PopoverTrigger,
   Textarea,
 } from '@/components/ui';
-import { createExpense, getExpenseCategories } from '@/lib/app';
+import { getExpenseCategories } from '@/lib/app';
 import { cn } from '@/lib/utils';
+import { useExpensesApi } from '@/services';
 import { useAccountsStore, useCategoryStore } from '@/store';
 
 const newExpenseFormSchema = z.object({
@@ -53,6 +54,7 @@ const newExpenseFormSchema = z.object({
 type NewExpenseFormType = z.infer<typeof newExpenseFormSchema>;
 
 export const NewExpenseContainer: FC = () => {
+  // Hooks
   const form = useForm<NewExpenseFormType>({
     resolver: zodResolver(newExpenseFormSchema),
     defaultValues: {
@@ -66,9 +68,13 @@ export const NewExpenseContainer: FC = () => {
   });
   const { accounts, isLoading: isAccountsLoading } = useAccountsStore();
   const { categories, isLoading: isCategoriesLoading } = useCategoryStore();
+  const {
+    addExpenseMutation: { mutateAsync: addExpense },
+  } = useExpensesApi();
 
+  // Callbacks
   const onSubmit = async (data: NewExpenseFormType) => {
-    await createExpense({
+    await addExpense({
       name: data.expenseName,
       amount: data.expenseAmount,
       category: data.expenseCategory,

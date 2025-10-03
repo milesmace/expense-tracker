@@ -1,58 +1,57 @@
-import type { PostgrestError } from '@supabase/supabase-js';
-
 import { SUPABASE_CONSTANTS } from '@/constants';
-import { useAuthStore } from '@/store';
+import { authQuery } from '@/services';
 import { supabase } from '@/supabase';
-import type { Income, Res } from '@/types';
+import type { Income } from '@/types';
 
-export const createIncome = async (
-  income: Omit<Income, 'id'>,
-): Promise<Res<PostgrestError | object>> => {
-  const { auth } = useAuthStore.getState();
+// Fetch all incomes for the logged-in user
+export const fetchIncomes = () =>
+  authQuery(async (userId) => {
+    const { error, data: incomes } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.INCOMES._)
+      .select()
+      .eq(SUPABASE_CONSTANTS.TABLES.INCOMES.USER_ID, userId);
 
-  if (!auth.isLoggedIn) {
-    throw new Error('User not logged in!!');
-  }
+    if (error) throw new Error(error.message);
+    return incomes as Income[];
+  });
 
-  const {
-    user: { id: userId },
-  } = auth.session;
+// Create a new income
+export const createIncome = (income: Omit<Income, 'id'>) =>
+  authQuery(async (userId) => {
+    const { error } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.INCOMES._)
+      .insert({ ...income, user_id: userId });
 
-  const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.INCOMES._)
-    .insert({ ...income, user_id: userId });
+    if (error) throw new Error(error.message);
+    return null;
+  });
 
-  return {
-    success: !error,
-    data: error?.message ?? 'Category created successfully',
-  };
-};
+// Update an existing income
+export const updateIncome = ({
+  incomeId,
+  income,
+}: {
+  incomeId: number;
+  income: Partial<Omit<Income, 'id'>>;
+}) =>
+  authQuery(async () => {
+    const { error } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.INCOMES._)
+      .update({ ...income })
+      .eq(SUPABASE_CONSTANTS.TABLES.INCOMES.ID, incomeId);
 
-export const updateIncome = async (
-  expenseId: number,
-  expense: Partial<Omit<Income, 'id'>>,
-): Promise<Res<PostgrestError | object>> => {
-  const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.INCOMES._)
-    .update({ ...expense })
-    .eq(SUPABASE_CONSTANTS.TABLES.INCOMES.ID, expenseId);
+    if (error) throw new Error(error.message);
+    return null;
+  });
 
-  return {
-    success: !error,
-    data: error ?? 'Expense updated successfully',
-  };
-};
+// Delete an income
+export const deleteIncome = (incomeId: number) =>
+  authQuery(async () => {
+    const { error } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.INCOMES._)
+      .delete()
+      .eq(SUPABASE_CONSTANTS.TABLES.INCOMES.ID, incomeId);
 
-export const deleteIncome = async (
-  incomeId: number,
-): Promise<Res<PostgrestError | object>> => {
-  const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.INCOMES._)
-    .delete()
-    .eq(SUPABASE_CONSTANTS.TABLES.INCOMES.ID, incomeId);
-
-  return {
-    success: !error,
-    data: error ?? 'Income deleted succesffully',
-  };
-};
+    if (error) throw new Error(error.message);
+    return null;
+  });

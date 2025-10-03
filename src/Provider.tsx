@@ -1,9 +1,18 @@
 import { useEffect, type FC, type ReactNode } from 'react';
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 
 import { selectTheme, useAuthStore, useThemeStore } from './store';
 import { supabase } from './supabase';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 type ProviderProps = {
   children?: ReactNode;
@@ -27,8 +36,10 @@ export const Provider: FC<ProviderProps> = ({ children }) => {
 
   return (
     <>
-      <Toaster position="top-right" offset={20} richColors theme={theme} />
-      {children}
+      <QueryClientProvider client={queryClient}>
+        <Toaster position="top-right" offset={20} richColors theme={theme} />
+        {children}
+      </QueryClientProvider>
     </>
   );
 };

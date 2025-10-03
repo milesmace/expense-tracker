@@ -1,11 +1,13 @@
 import { type FC } from 'react';
 
-import { useAccountsStore } from '@/store';
+import { useAccountsApi } from '@/services';
 
 export const HomePage: FC = () => {
-  const { accounts, isLoading } = useAccountsStore();
+  const {
+    fetchAccountsQuery: { isFetching, data: accounts },
+  } = useAccountsApi();
 
-  return isLoading ? (
+  return isFetching ? (
     'Loading...'
   ) : (
     <div>
