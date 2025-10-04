@@ -6,8 +6,8 @@ import { format } from 'date-fns';
 import { Calendar1, ChevronsUpDownIcon } from 'lucide-react';
 import { z } from 'zod';
 
+import { Button } from '@/components/app';
 import {
-  Button,
   Calendar,
   Command,
   CommandEmpty,
@@ -28,8 +28,8 @@ import {
   Textarea,
 } from '@/components/ui';
 import { useNotify } from '@/hooks';
-import { createTransaction } from '@/lib/app';
 import { cn } from '@/lib/utils';
+import { useTransactionsApi } from '@/services';
 import { useAccountsStore } from '@/store';
 
 const newTransactionFormSchema = z.object({
@@ -70,6 +70,12 @@ export const NewTransactionContainer: FC = () => {
   });
   const { accounts, isLoading: isAccountsLoading } = useAccountsStore();
   const notify = useNotify();
+  const {
+    addTransactionMutation: {
+      mutateAsync: addTransaction,
+      isPending: isCreatingTransaction,
+    },
+  } = useTransactionsApi();
 
   // Callbacks
   const onSubmit = useCallback(
@@ -83,15 +89,15 @@ export const NewTransactionContainer: FC = () => {
         return;
       }
 
-      // Create the Transaction Record
-      const { success } = await createTransaction({
-        name: data.transactionName,
-        amount: data.transactionAmount,
-        from_account: data.transactionFromAccount,
-        to_account: data.transactionToAccount,
-      });
+      try {
+        // Create the Transaction Record
+        await addTransaction({
+          name: data.transactionName,
+          amount: data.transactionAmount,
+          from_account: data.transactionFromAccount,
+          to_account: data.transactionToAccount,
+        });
 
-      if (success) {
         // Show a success notification
         notify({
           title: 'Transaction created successfully',
@@ -100,9 +106,9 @@ export const NewTransactionContainer: FC = () => {
 
         // Reset the form
         form.reset();
-      } else {
+      } catch (e) {
         notify({
-          title: 'Cannot create Transaction',
+          title: (e as Error).message ?? 'Cannot create Transaction',
           type: 'error',
         });
       }
@@ -167,7 +173,7 @@ export const NewTransactionContainer: FC = () => {
               )}
             />
 
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <FormField
                 control={form.control}
                 name="transactionDate"
@@ -350,7 +356,11 @@ export const NewTransactionContainer: FC = () => {
             />
           </div>
 
-          <Button type="submit" className="cursor-pointer">
+          <Button
+            type="submit"
+            className="cursor-pointer"
+            isLoading={isCreatingTransaction}
+          >
             Add Transaction
           </Button>
         </form>

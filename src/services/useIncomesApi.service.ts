@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   createIncome,
@@ -14,15 +14,31 @@ export const useIncomesApi = () => {
     queryKey: ['incomes'],
     enabled: false,
   });
+  const queryClient = useQueryClient();
 
   // Create
-  const addIncomeMutation = useMutation({ mutationFn: createIncome });
+  const addIncomeMutation = useMutation({
+    mutationFn: createIncome,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+    },
+  });
 
   // Update
-  const updateIncomeMutation = useMutation({ mutationFn: updateIncome });
+  const updateIncomeMutation = useMutation({
+    mutationFn: updateIncome,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+    },
+  });
 
   // Delete
-  const deleteIncomeMutation = useMutation({ mutationFn: deleteIncome });
+  const deleteIncomeMutation = useMutation({
+    mutationFn: deleteIncome,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+    },
+  });
 
   return {
     fetchIncomesQuery,

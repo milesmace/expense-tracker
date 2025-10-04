@@ -6,8 +6,8 @@ import { format } from 'date-fns';
 import { Calendar1, ChevronsUpDownIcon } from 'lucide-react';
 import { z } from 'zod';
 
+import { Button } from '@/components/app';
 import {
-  Button,
   Calendar,
   Command,
   CommandEmpty,
@@ -71,7 +71,10 @@ export const NewExpenseContainer: FC = () => {
   const { categories, isLoading: isCategoriesLoading } = useCategoryStore();
   const notify = useNotify();
   const {
-    addExpenseMutation: { mutateAsync: addExpense },
+    addExpenseMutation: {
+      mutateAsync: addExpense,
+      isPending: isExpenseCreating,
+    },
   } = useExpensesApi();
 
   // Callbacks
@@ -160,7 +163,7 @@ export const NewExpenseContainer: FC = () => {
               )}
             />
 
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <FormField
                 control={form.control}
                 name="expenseDate"
@@ -348,7 +351,11 @@ export const NewExpenseContainer: FC = () => {
             />
           </div>
 
-          <Button type="submit" className="cursor-pointer">
+          <Button
+            type="submit"
+            className="cursor-pointer"
+            isLoading={isExpenseCreating}
+          >
             Add Expense
           </Button>
         </form>
