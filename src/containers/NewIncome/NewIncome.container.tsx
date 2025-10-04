@@ -6,8 +6,8 @@ import { format } from 'date-fns';
 import { Calendar1, ChevronsUpDownIcon } from 'lucide-react';
 import { z } from 'zod';
 
+import { Button } from '@/components/app';
 import {
-  Button,
   Calendar,
   Command,
   CommandEmpty,
@@ -28,8 +28,9 @@ import {
   Textarea,
 } from '@/components/ui';
 import { useNotify } from '@/hooks';
-import { createIncome, getIncomeCategories } from '@/lib/app';
+import { getIncomeCategories } from '@/lib/app';
 import { cn } from '@/lib/utils';
+import { useIncomesApi } from '@/services';
 import { useAccountsStore, useCategoryStore } from '@/store';
 
 const newIncomeFormSchema = z.object({
@@ -69,19 +70,22 @@ export const NewIncomeContainer: FC = () => {
   const { accounts, isLoading: isAccountsLoading } = useAccountsStore();
   const { categories, isLoading: isCategoriesLoading } = useCategoryStore();
   const notify = useNotify();
+  const {
+    addIncomeMutation: { mutateAsync: addIncome, isPending: isIncomeCreating },
+  } = useIncomesApi();
 
   // Callbacks
   const onSubmit = useCallback(
     async (data: NewIncomeFormType) => {
-      // Create the Income Record
-      const { success } = await createIncome({
-        name: data.incomeName,
-        amount: data.incomeAmount,
-        category: data.incomeCategory,
-        to_account: data.incomeToAccount,
-      });
+      try {
+        // Create the Income Record
+        await addIncome({
+          name: data.incomeName,
+          amount: data.incomeAmount,
+          category: data.incomeCategory,
+          to_account: data.incomeToAccount,
+        });
 
-      if (success) {
         // Show a success notification
         notify({
           title: 'Income Created Successfully',
@@ -90,14 +94,14 @@ export const NewIncomeContainer: FC = () => {
 
         // Reset the form
         form.reset();
-      } else {
+      } catch (e) {
         notify({
-          title: 'Cannot create Income',
+          title: (e as Error).message ?? 'Cannot create Income',
           type: 'error',
         });
       }
     },
-    [form, notify],
+    [form, notify, addIncome],
   );
 
   return (
@@ -156,7 +160,7 @@ export const NewIncomeContainer: FC = () => {
               )}
             />
 
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <FormField
                 control={form.control}
                 name="incomeDate"
@@ -338,7 +342,11 @@ export const NewIncomeContainer: FC = () => {
             />
           </div>
 
-          <Button type="submit" className="cursor-pointer">
+          <Button
+            type="submit"
+            className="cursor-pointer"
+            isLoading={isIncomeCreating}
+          >
             Add Income
           </Button>
         </form>

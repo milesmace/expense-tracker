@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   createExpense,
@@ -14,15 +14,31 @@ export const useExpensesApi = () => {
     queryKey: ['expenses'],
     enabled: false,
   });
+  const queryClient = useQueryClient();
 
   // Create
-  const addExpenseMutation = useMutation({ mutationFn: createExpense });
+  const addExpenseMutation = useMutation({
+    mutationFn: createExpense,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+    },
+  });
 
   // Update
-  const updateExpenseMutation = useMutation({ mutationFn: updateExpense });
+  const updateExpenseMutation = useMutation({
+    mutationFn: updateExpense,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+    },
+  });
 
   // Delete
-  const deleteExpenseMutation = useMutation({ mutationFn: deleteExpense });
+  const deleteExpenseMutation = useMutation({
+    mutationFn: deleteExpense,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+    },
+  });
 
   return {
     fetchExpensesQuery,

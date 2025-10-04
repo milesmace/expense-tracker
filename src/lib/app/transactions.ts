@@ -1,61 +1,57 @@
-import type { PostgrestError } from '@supabase/supabase-js';
-
 import { SUPABASE_CONSTANTS } from '@/constants';
-import { useAuthStore } from '@/store';
+import { authQuery } from '@/services';
 import { supabase } from '@/supabase';
-import type { Res, Transaction } from '@/types';
+import type { Transaction } from '@/types';
 
-export const createTransaction = async (
-  transaction: Omit<Transaction, 'id'>,
-): Promise<Res<PostgrestError>> => {
-  const { auth } = useAuthStore.getState();
+// Fetch all transactions for the logged-in user
+export const fetchTransactions = () =>
+  authQuery(async (userId) => {
+    const { error, data: transactions } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.TRANSACTIONS._)
+      .select()
+      .eq(SUPABASE_CONSTANTS.TABLES.TRANSACTIONS.USER_ID, userId);
 
-  if (!auth.isLoggedIn) {
-    return {
-      success: false,
-      data: 'User not logged in!!',
-    };
-  }
+    if (error) throw new Error(error.message);
+    return transactions as Transaction[];
+  });
 
-  const {
-    user: { id: userId },
-  } = auth.session;
+// Create a new transaction
+export const createTransaction = (transaction: Omit<Transaction, 'id'>) =>
+  authQuery(async (userId) => {
+    const { error } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.TRANSACTIONS._)
+      .insert({ ...transaction, user_id: userId });
 
-  const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.TRANSACTIONS._)
-    .insert({ ...transaction, user_id: userId });
+    if (error) throw new Error(error.message);
+    return null;
+  });
 
-  return {
-    success: !error,
-    data: error?.message ?? 'Transaction created successfully',
-  };
-};
+// Update an existing transaction
+export const updateTransaction = ({
+  transactionId,
+  transaction,
+}: {
+  transactionId: number;
+  transaction: Partial<Omit<Transaction, 'id'>>;
+}) =>
+  authQuery(async () => {
+    const { error } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.TRANSACTIONS._)
+      .update({ ...transaction })
+      .eq(SUPABASE_CONSTANTS.TABLES.TRANSACTIONS.ID, transactionId);
 
-export const updateTransaction = async (
-  transactionId: number,
-  transaction: Partial<Omit<Transaction, 'id'>>,
-): Promise<Res<PostgrestError | object>> => {
-  const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.TRANSACTIONS._)
-    .update({ ...transaction })
-    .eq(SUPABASE_CONSTANTS.TABLES.TRANSACTIONS.ID, transactionId);
+    if (error) throw new Error(error.message);
+    return null;
+  });
 
-  return {
-    success: !error,
-    data: error ?? 'Transaction updated successfully',
-  };
-};
+// Delete a transaction
+export const deleteTransaction = (transactionId: number) =>
+  authQuery(async () => {
+    const { error } = await supabase
+      .from(SUPABASE_CONSTANTS.TABLES.TRANSACTIONS._)
+      .delete()
+      .eq(SUPABASE_CONSTANTS.TABLES.TRANSACTIONS.ID, transactionId);
 
-export const deleteTransaction = async (
-  transactionId: number,
-): Promise<Res<PostgrestError | object>> => {
-  const { error } = await supabase
-    .from(SUPABASE_CONSTANTS.TABLES.TRANSACTIONS._)
-    .delete()
-    .eq(SUPABASE_CONSTANTS.TABLES.TRANSACTIONS.ID, transactionId);
-
-  return {
-    success: !error,
-    data: error ?? 'Transaction deleted succesffully',
-  };
-};
+    if (error) throw new Error(error.message);
+    return null;
+  });
