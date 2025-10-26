@@ -1,7 +1,7 @@
-const App = () => (
-  <h1 className="text-3xl text-center font-bold underline">
-    Hello world!
-  </h1>
-);
+import { RouterProvider } from 'react-router-dom';
+
+import { router } from '@/router';
+
+const App = () => <RouterProvider router={router} />;
 
 export default App;

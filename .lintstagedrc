@@ -1,0 +1,4 @@
+{
+  "./src/**/*.{ts}": "pnpm eslint",
+  "./src/**/*.{ts,css}": "pnpm prettier"
+}
